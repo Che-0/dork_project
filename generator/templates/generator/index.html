@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Google Dorks</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Iconos de Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .dork-code { background-color: #212529; color: #00ff00; font-family: monospace; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4"><i class="bi bi-search"></i> Generador Avanzado de Dorks</h1>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Formulario de Búsqueda -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.categoria.label }}</label>
+                                {{ form.categoria }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.target.label }}</label>
+                                {{ form.target }}
+                                <div class="form-text">{{ form.target.help_text }}</div>
+                            </div>
+                            
+                            <!-- Nueva fila para los filtros adicionales -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ form.palabras_extra.label }}</label>
+                                    {{ form.palabras_extra }}
+                                    <div class="form-text">{{ form.palabras_extra.help_text }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ form.excluir_terminos.label }}</label>
+                                    {{ form.excluir_terminos }}
+                                    <div class="form-text">{{ form.excluir_terminos.help_text }}</div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mt-2">
+                                <i class="bi bi-gear-fill"></i> Generar Dorks
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Resultados Generados -->
+                {% if dorks_generados %}
+                    <div class="alert alert-success">
+                        <strong>Resultados para:</strong> {{ target_limpio }} en la categoría "{{ categoria_seleccionada }}"
+                    </div>
+
+                    {% for dork in dorks_generados %}
+                    <div class="card mb-3 border-secondary">
+                        <div class="card-header bg-secondary text-white fw-bold">
+                            {{ dork.titulo }}
+                        </div>
+                        <div class="card-body">
+                            {% if dork.explicacion %}
+                                <p class="card-text text-muted small">{{ dork.explicacion }}</p>
+                            {% endif %}
+                            
+                            <!-- Caja de código estilo terminal -->
+                            <div class="dork-code mb-3" id="dork-{{ forloop.counter }}">
+                                {{ dork.dork_texto }}
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <!-- Botón para buscar directo en Google -->
+                                <a href="{{ dork.link_google }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-google"></i> Buscar en Google
+                                </a>
+                                <!-- Botón para copiar al portapapeles -->
+                                <button onclick="copiarDork('dork-{{ forloop.counter }}')" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-clipboard"></i> Copiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% elif request.method == 'POST' %}
+                    <!-- Mensaje si no hay dorks en esa categoría aún -->
+                    <div class="alert alert-warning">
+                        No hay plantillas de Dorks registradas para esta categoría todavía. Añade algunas desde el panel de administración.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para copiar al portapapeles -->
+    <script>
+        function copiarDork(elementId) {
+            var textoDork = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(textoDork).then(function() {
+                alert("¡Dork copiado al portapapeles!");
+            }, function(err) {
+                console.error('Error al copiar el texto: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
